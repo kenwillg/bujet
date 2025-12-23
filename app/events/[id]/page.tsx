@@ -55,13 +55,17 @@ export default function EventDetailPage() {
   const [fetchedProduct, setFetchedProduct] = useState<any>(null);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const eventData = getEvent(eventId);
+  const loadEvent = async () => {
+    const eventData = await getEvent(eventId);
     if (!eventData) {
       router.push("/events");
       return;
     }
     setEvent(eventData);
+  };
+
+  useEffect(() => {
+    loadEvent();
   }, [eventId, router]);
 
   const handleFetchProduct = async () => {
@@ -105,7 +109,7 @@ export default function EventDetailPage() {
     }
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!fetchedProduct) return;
 
     const source = productLink.includes("shopee") ? "shopee" : 
@@ -129,7 +133,7 @@ export default function EventDetailPage() {
       stock: fetchedProduct.stock,
     };
     
-    const newProduct = addProductToEvent(eventId, {
+    const newProduct = await addProductToEvent(eventId, {
       ...productData,
       link: productLink,
       source,
@@ -138,10 +142,7 @@ export default function EventDetailPage() {
 
     if (newProduct) {
       // Refresh event data
-      const updatedEvent = getEvent(eventId);
-      if (updatedEvent) {
-        setEvent(updatedEvent);
-      }
+      await loadEvent();
       setProductLink("");
       setQuantity(1);
       setFetchedProduct(null);
@@ -152,20 +153,18 @@ export default function EventDetailPage() {
     }
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    deleteProduct(eventId, productId);
-    const updatedEvent = getEvent(eventId);
-    if (updatedEvent) {
-      setEvent(updatedEvent);
+  const handleDeleteProduct = async (productId: string) => {
+    const success = await deleteProduct(eventId, productId);
+    if (success) {
+      await loadEvent();
     }
   };
 
-  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+  const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    updateProduct(eventId, productId, { quantity: newQuantity });
-    const updatedEvent = getEvent(eventId);
-    if (updatedEvent) {
-      setEvent(updatedEvent);
+    const updated = await updateProduct(eventId, productId, { quantity: newQuantity });
+    if (updated) {
+      await loadEvent();
     }
   };
 

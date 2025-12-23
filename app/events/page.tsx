@@ -42,14 +42,19 @@ export default function EventsPage() {
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
 
+  const loadEvents = async () => {
+    const eventsData = await getEvents();
+    setEvents(eventsData);
+  };
+
   useEffect(() => {
-    setEvents(getEvents());
+    loadEvents();
   }, []);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formData.name.trim()) return;
     
-    const newEvent = createEvent({
+    const newEvent = await createEvent({
       name: formData.name,
       description: formData.description || undefined,
       createdAt: new Date(),
@@ -57,9 +62,11 @@ export default function EventsPage() {
       products: [],
     });
     
-    setEvents(getEvents());
-    setFormData({ name: "", description: "" });
-    setIsCreateDialogOpen(false);
+    if (newEvent) {
+      await loadEvents();
+      setFormData({ name: "", description: "" });
+      setIsCreateDialogOpen(false);
+    }
   };
 
   const handleEdit = (event: Event) => {
@@ -68,23 +75,27 @@ export default function EventsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingEvent || !formData.name.trim()) return;
     
-    updateEvent(editingEvent.id, {
+    const updated = await updateEvent(editingEvent.id, {
       name: formData.name,
       description: formData.description || undefined,
     });
     
-    setEvents(getEvents());
-    setFormData({ name: "", description: "" });
-    setIsEditDialogOpen(false);
-    setEditingEvent(null);
+    if (updated) {
+      await loadEvents();
+      setFormData({ name: "", description: "" });
+      setIsEditDialogOpen(false);
+      setEditingEvent(null);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    deleteEvent(id);
-    setEvents(getEvents());
+  const handleDelete = async (id: string) => {
+    const success = await deleteEvent(id);
+    if (success) {
+      await loadEvents();
+    }
   };
 
   const totalBudget = (event: Event) => {
