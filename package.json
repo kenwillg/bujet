@@ -10,20 +10,24 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
-    "@prisma/client": "^7.2.0",
     "@supabase/supabase-js": "^2.89.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
+    "@prisma/client": "^6.15.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
-    "prisma": "^7.2.0",
+    "prisma": "^6.15.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
