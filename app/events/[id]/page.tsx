@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { getEvent, addProductToEvent, updateProduct, deleteProduct } from "@/lib/store";
 import { Event, Product, ProductVariant } from "@/lib/types";
+import { toastSuccess, toastError } from "@/lib/toast";
 
 export default function EventDetailPage() {
   const params = useParams();
@@ -133,38 +134,60 @@ export default function EventDetailPage() {
       stock: fetchedProduct.stock,
     };
     
-    const newProduct = await addProductToEvent(eventId, {
-      ...productData,
-      link: productLink,
-      source,
-      quantity: quantity,
-    });
+    try {
+      const newProduct = await addProductToEvent(eventId, {
+        ...productData,
+        link: productLink,
+        source,
+        quantity: quantity,
+      });
 
-    if (newProduct) {
-      // Refresh event data
-      await loadEvent();
-      setProductLink("");
-      setQuantity(1);
-      setFetchedProduct(null);
-      setSelectedVariantId(null);
-      setIsAddDialogOpen(false);
-    } else {
+      if (newProduct) {
+        toastSuccess("Produk berhasil ditambahkan", `"${newProduct.name}" telah ditambahkan ke event`);
+        await loadEvent();
+        setProductLink("");
+        setQuantity(1);
+        setFetchedProduct(null);
+        setSelectedVariantId(null);
+        setIsAddDialogOpen(false);
+      } else {
+        toastError("Gagal menambahkan produk", "Silakan coba lagi");
+        setFetchError("Gagal menambahkan produk ke event");
+      }
+    } catch (error) {
+      toastError("Gagal menambahkan produk", "Terjadi kesalahan saat menambahkan produk");
       setFetchError("Gagal menambahkan produk ke event");
     }
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    const success = await deleteProduct(eventId, productId);
-    if (success) {
-      await loadEvent();
+    const product = event?.products.find((p) => p.id === productId);
+    try {
+      const success = await deleteProduct(eventId, productId);
+      if (success) {
+        toastSuccess("Produk berhasil dihapus", product ? `"${product.name}" telah dihapus` : undefined);
+        await loadEvent();
+      } else {
+        toastError("Gagal menghapus produk", "Silakan coba lagi");
+      }
+    } catch (error) {
+      toastError("Gagal menghapus produk", "Terjadi kesalahan saat menghapus produk");
     }
   };
 
   const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    const updated = await updateProduct(eventId, productId, { quantity: newQuantity });
-    if (updated) {
-      await loadEvent();
+    const product = event?.products.find((p) => p.id === productId);
+    try {
+      const updated = await updateProduct(eventId, productId, { quantity: newQuantity });
+      if (updated) {
+        toastSuccess("Jumlah produk diupdate", product ? `Jumlah "${product.name}" menjadi ${newQuantity}` : undefined);
+        await loadEvent();
+      } else {
+        toastError("Gagal mengupdate jumlah", "Silakan coba lagi");
+      }
+    } catch (error) {
+      toastError("Gagal mengupdate jumlah", "Terjadi kesalahan saat mengupdate jumlah");
     }
   };
 

@@ -29,22 +29,35 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { PlusIcon, PencilIcon, TrashIcon, CalendarIcon } from "lucide-react";
 import { getEvents, createEvent, updateEvent, deleteEvent } from "@/lib/store";
 import { Event } from "@/lib/types";
+import { toastSuccess, toastError } from "@/lib/toast";
 
 export default function EventsPage() {
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const loadEvents = async () => {
-    const eventsData = await getEvents();
-    setEvents(eventsData);
+    setIsLoading(true);
+    try {
+      const eventsData = await getEvents();
+      setEvents(eventsData);
+    } catch (error) {
+      toastError("Gagal memuat events", "Terjadi kesalahan saat memuat data");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -54,15 +67,25 @@ export default function EventsPage() {
   const handleCreate = async () => {
     if (!formData.name.trim()) return;
     
-    const newEvent = await createEvent({
-      name: formData.name,
-      description: formData.description || undefined,
-    });
-    
-    if (newEvent) {
-      await loadEvents();
-      setFormData({ name: "", description: "" });
-      setIsCreateDialogOpen(false);
+    setIsCreating(true);
+    try {
+      const newEvent = await createEvent({
+        name: formData.name,
+        description: formData.description || undefined,
+      });
+      
+      if (newEvent) {
+        toastSuccess("Event berhasil dibuat", `Event "${formData.name}" telah ditambahkan`);
+        await loadEvents();
+        setFormData({ name: "", description: "" });
+        setIsCreateDialogOpen(false);
+      } else {
+        toastError("Gagal membuat event", "Silakan coba lagi");
+      }
+    } catch (error) {
+      toastError("Gagal membuat event", "Terjadi kesalahan saat membuat event");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -73,25 +96,50 @@ export default function EventsPage() {
   };
 
   const handleUpdate = async () => {
-    if (!editingEvent || !formData.name.trim()) return;
+    if (!editingEvent || !formData.name.trim()) {
+      toastError("Nama event tidak boleh kosong");
+      return;
+    }
     
-    const updated = await updateEvent(editingEvent.id, {
-      name: formData.name,
-      description: formData.description || undefined,
-    });
-    
-    if (updated) {
-      await loadEvents();
-      setFormData({ name: "", description: "" });
-      setIsEditDialogOpen(false);
-      setEditingEvent(null);
+    setIsUpdating(true);
+    try {
+      const updated = await updateEvent(editingEvent.id, {
+        name: formData.name,
+        description: formData.description || undefined,
+      });
+      
+      if (updated) {
+        toastSuccess("Event berhasil diupdate", `"${updated.name}" telah diperbarui`);
+        await loadEvents();
+        setFormData({ name: "", description: "" });
+        setIsEditDialogOpen(false);
+        setEditingEvent(null);
+      } else {
+        toastError("Gagal mengupdate event", "Silakan coba lagi");
+      }
+    } catch (error) {
+      toastError("Gagal mengupdate event", "Terjadi kesalahan saat mengupdate event");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    const success = await deleteEvent(id);
-    if (success) {
-      await loadEvents();
+    const event = events.find((e) => e.id === id);
+    setIsDeleting(id);
+    try {
+      const success = await deleteEvent(id);
+      if (success) {
+        toastSuccess("Event berhasil dihapus", event ? `"${event.name}" telah dihapus` : undefined);
+        await loadEvents();
+      } else {
+        toastError("Gagal menghapus event", "Silakan coba lagi");
+      }
+    } catch (error) {
+      toastError("Gagal menghapus event", "Terjadi kesalahan saat menghapus event");
+    } finally {
+      setIsDeleting(null);
+      setDeleteEventId(null);
     }
   };
 
@@ -173,7 +221,16 @@ export default function EventsPage() {
                 >
                   Batal
                 </Button>
-                <Button onClick={handleCreate}>Buat</Button>
+                <Button onClick={handleCreate} disabled={isCreating}>
+                  {isCreating ? (
+                    <>
+                      <Spinner className="mr-2 h-4 w-4" />
+                      Membuat...
+                    </>
+                  ) : (
+                    "Buat"
+                  )}
+                </Button>
               </DialogFooter>
             </DialogPopup>
           </Dialog>
@@ -225,13 +282,29 @@ export default function EventsPage() {
               >
                 Batal
               </Button>
-              <Button onClick={handleUpdate}>Simpan</Button>
+              <Button onClick={handleUpdate} disabled={isUpdating}>
+                {isUpdating ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  "Simpan"
+                )}
+              </Button>
             </DialogFooter>
           </DialogPopup>
         </Dialog>
 
         {/* Events Grid */}
-        {events.length === 0 ? (
+        {isLoading ? (
+          <Card>
+            <CardPanel className="py-12 text-center">
+              <Spinner className="mx-auto mb-4 h-8 w-8" />
+              <p className="text-muted-foreground">Memuat events...</p>
+            </CardPanel>
+          </Card>
+        ) : events.length === 0 ? (
           <Card>
             <CardPanel className="py-12 text-center">
               <p className="text-muted-foreground">
@@ -286,12 +359,17 @@ export default function EventsPage() {
                             </Button>
                             <Button
                               variant="destructive"
-                              onClick={() => {
-                                handleDelete(event.id);
-                                setDeleteEventId(null);
-                              }}
+                              onClick={() => handleDelete(event.id)}
+                              disabled={isDeleting === event.id}
                             >
-                              Hapus
+                              {isDeleting === event.id ? (
+                                <>
+                                  <Spinner className="mr-2 h-4 w-4" />
+                                  Menghapus...
+                                </>
+                              ) : (
+                                "Hapus"
+                              )}
                             </Button>
                           </AlertDialogFooter>
                         </AlertDialogPopup>
