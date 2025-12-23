@@ -57,9 +57,6 @@ export default function EventsPage() {
     const newEvent = await createEvent({
       name: formData.name,
       description: formData.description || undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      products: [],
     });
     
     if (newEvent) {
@@ -99,7 +96,10 @@ export default function EventsPage() {
   };
 
   const totalBudget = (event: Event) => {
-    return event.products.reduce((sum, product) => sum + product.price, 0);
+    return event.products.reduce(
+      (sum, product) => sum + product.price * (product.quantity || 1),
+      0
+    );
   };
 
   return (
