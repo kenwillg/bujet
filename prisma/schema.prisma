@@ -28,6 +28,7 @@ model Product {
   quantity    Int      @default(1)
   link        String
   source      String // "shopee" | "tokopedia" | "manual"
+  shopName    String?
   variantId   String?
   variantName String?
   createdAt   DateTime @default(now())

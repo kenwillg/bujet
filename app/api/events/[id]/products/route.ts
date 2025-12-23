@@ -45,6 +45,7 @@ export async function POST(
       quantity = 1,
       link,
       source,
+      shopName,
       variantId,
       variantName,
     } = body;
@@ -106,6 +107,7 @@ export async function POST(
         quantity: quantity || 1,
         link: link.trim(),
         source: source,
+        shopName: shopName?.trim() || null,
         variantId: variantId?.trim() || null,
         variantName: variantName?.trim() || null,
       },

@@ -139,6 +139,7 @@ export default function EventDetailPage() {
         ...productData,
         link: productLink,
         source,
+        shopName: fetchedProduct.shopName,
         quantity: quantity,
       });
 
@@ -259,7 +260,7 @@ export default function EventDetailPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Dibuat
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-2xl font-bold">
                 {new Date(event.createdAt).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "long",
@@ -318,7 +319,12 @@ export default function EventDetailPage() {
                 ) : (
                   <>
                     <div className="rounded-lg border bg-muted/30 p-4">
-                      <h4 className="font-semibold mb-3">{fetchedProduct.name}</h4>
+                      <h4 className="font-semibold mb-2">{fetchedProduct.name}</h4>
+                      {fetchedProduct.shopName && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Toko: {fetchedProduct.shopName}
+                        </p>
+                      )}
                       {fetchedProduct.variants && fetchedProduct.variants.length > 0 ? (
                         <div className="space-y-3">
                           <Label className="text-base font-medium">Pilih Varian:</Label>
@@ -432,6 +438,11 @@ export default function EventDetailPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg">{product.name}</CardTitle>
+                      {product.shopName && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Toko: {product.shopName}
+                        </p>
+                      )}
                       {product.variantName && (
                         <p className="text-sm text-muted-foreground mt-1">
                           Varian: {product.variantName}

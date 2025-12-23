@@ -16,6 +16,7 @@ export interface Product {
   quantity?: number;
   link: string;
   source: "shopee" | "tokopedia" | "manual";
+  shopName?: string;
   variantId?: string;
   variantName?: string;
   createdAt: Date;
@@ -33,6 +34,7 @@ export interface ProductFetchResult {
   name: string;
   price: number;
   stock: number;
+  shopName?: string;
   variants?: ProductVariant[];
   selectedVariantId?: string;
   success: boolean;

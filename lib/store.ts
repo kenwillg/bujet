@@ -160,6 +160,7 @@ export async function addProductToEvent(
         quantity: product.quantity || 1,
         link: product.link,
         source: product.source,
+        shopName: product.shopName,
         variantId: product.variantId,
         variantName: product.variantName,
       }),
